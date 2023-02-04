@@ -12,7 +12,8 @@ export function Home() {
     "Triceps",
     "Ombro",
   ]);
-  const [groupSelected, setGroupSelected] = useState("costa");
+  const [exercises, setExercises] = useState(["1", "2", "3", "4"]);
+  const [groupSelected, setGroupSelected] = useState("costas");
 
   return (
     <VStack flex={1}>
@@ -24,7 +25,9 @@ export function Home() {
         renderItem={({ item }) => (
           <Group
             name={item}
-            isActive={groupSelected === item}
+            isActive={
+              groupSelected.toLocaleUpperCase() === item.toLocaleUpperCase()
+            }
             onPress={() => setGroupSelected(item)}
           />
         )}
@@ -42,11 +45,17 @@ export function Home() {
           </Heading>
 
           <Text color="gray.200" fontSize="sm">
-            4
+            {exercises.length}
           </Text>
         </HStack>
 
-        <ExerciseCard />
+        <FlatList
+          data={exercises}
+          keyExtractor={(item) => item}
+          renderItem={({ item }) => <ExerciseCard />}
+          showsVerticalScrollIndicator={false}
+          _contentContainerStyle={{ paddingBottom: 20 }}
+        />
       </VStack>
     </VStack>
   );
