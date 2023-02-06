@@ -1,5 +1,14 @@
+import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
-import { Center, Heading, Image, ScrollView, Text, VStack } from "native-base";
+import {
+  Center,
+  Heading,
+  Image,
+  ScrollView,
+  Text,
+  useToast,
+  VStack,
+} from "native-base";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -8,8 +17,13 @@ import { AuthNavigatorRoutesProps } from "@routes/auth.routes";
 
 import LogoSvg from "@assets/logo.svg";
 import BackgroundImg from "@assets/background.png";
-import { Input } from "@components/Input";
+
 import { Button } from "@components/Button";
+import { Input } from "@components/Input";
+
+import { useAuth } from "@hooks/useAuth";
+
+import { AppError } from "@utils/AppErrors";
 
 type FormDataProps = {
   email: string;
@@ -17,31 +31,41 @@ type FormDataProps = {
 };
 
 const signInSchema = yup.object({
-  name: yup
-    .string()
-    .required("Informe o email.")
-    .email("Inform um e-mail válido."),
-  password: yup
-    .string()
-    .required("Informe a senha.")
-    .min(6, "A senha deve ter no mínimo 6 dígitos."),
+  email: yup.string().required("Informe o email."),
+  password: yup.string().required("Informe a senha."),
 });
 
 export function SignIn() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { signIn } = useAuth();
+  const navigation = useNavigation<AuthNavigatorRoutesProps>();
+  const toast = useToast();
+
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm<FormDataProps>({ resolver: yupResolver(signInSchema) });
 
-  const navigation = useNavigation<AuthNavigatorRoutesProps>();
-
   function handleNewAccount() {
     navigation.navigate("signUp");
   }
 
-  function handleSignIn(data: FormDataProps) {
-    console.log(data);
+  async function handleSignIn({ email, password }: FormDataProps) {
+    try {
+      setIsLoading(true);
+      await signIn(email, password);
+    } catch (error) {
+      const isAppError = error instanceof AppError;
+
+      const title = isAppError
+        ? error.message
+        : "Não foi possível entrar. Tente novamente mais tarde.";
+
+      setIsLoading(false);
+      toast.show({ title, placement: "top", bgColor: "red.500" });
+    }
   }
 
   return (
@@ -79,10 +103,9 @@ export function SignIn() {
                 placeholder="E-mail"
                 keyboardType="email-address"
                 autoCapitalize="none"
-                value={value}
                 onChangeText={onChange}
-                onSubmitEditing={handleSubmit(handleSignIn)}
-                returnKeyType="send"
+                value={value}
+                errorMessage={errors.email?.message}
               />
             )}
           />
@@ -92,15 +115,22 @@ export function SignIn() {
             name="password"
             render={({ field: { onChange, value } }) => (
               <Input
-                placeholder="Senha"
+                placeholder="Confirme a senha"
                 secureTextEntry
-                value={value}
                 onChangeText={onChange}
+                value={value}
+                onSubmitEditing={handleSubmit(handleSignIn)}
+                returnKeyType="send"
+                errorMessage={errors.password?.message}
               />
             )}
           />
 
-          <Button title="Acessar" onPress={handleSubmit(handleSignIn)} />
+          <Button
+            title="Acessar"
+            onPress={handleSubmit(handleSignIn)}
+            isLoading={isLoading}
+          />
         </Center>
 
         <Center mt={24}>
