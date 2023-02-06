@@ -1,28 +1,75 @@
-import { useState } from "react";
-import { useNavigation } from "@react-navigation/native";
-import { FlatList, Heading, HStack, Text, VStack } from "native-base";
+import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { FlatList, Heading, HStack, Text, useToast, VStack } from "native-base";
+
+import { api } from "@services/api";
+import { AppError } from "@utils/AppErrors";
 
 import { Group } from "@components/Group";
 import { HomeHeader } from "@components/HomeHeader";
 import { ExerciseCard } from "@components/ExerciseCard";
 
 import { AppNavigatorRoutesProps } from "@routes/app.routes";
+import { ExerciseDTO } from "@dtos/ExerciseDTO";
 
 export function Home() {
-  const [groups, setGroups] = useState([
-    "Costas",
-    "Biceps",
-    "Triceps",
-    "Ombro",
-  ]);
-  const [exercises, setExercises] = useState(["1", "2", "3", "4"]);
+  const [groups, setGroups] = useState<string[]>([]);
+  const [exercises, setExercises] = useState<ExerciseDTO[]>([]);
   const [groupSelected, setGroupSelected] = useState("costas");
+
+  const toast = useToast();
 
   const navigation = useNavigation<AppNavigatorRoutesProps>();
 
   function handleOpenExerciseDetails() {
     navigation.navigate("exercise");
   }
+
+  async function fetchGroups() {
+    try {
+      const response = await api.get("/groups");
+      setGroups(response.data);
+    } catch (error) {
+      const isAppError = error instanceof AppError;
+      const title = isAppError
+        ? error.message
+        : "Não foi possível carregar os grupos musculares.";
+
+      toast.show({
+        title,
+        placement: "top",
+        bgColor: "red.500",
+      });
+    }
+  }
+
+  async function fetchExercisesByGroup() {
+    try {
+      const response = await api.get(`/exercises/bygroup/${groupSelected}`);
+      setExercises(response.data);
+    } catch (error) {
+      const isAppError = error instanceof AppError;
+      const title = isAppError
+        ? error.message
+        : "Não foi possível carregar os exercícios.";
+
+      toast.show({
+        title,
+        placement: "top",
+        bgColor: "red.500",
+      });
+    }
+  }
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchExercisesByGroup();
+    }, [groupSelected])
+  );
 
   return (
     <VStack flex={1}>
@@ -61,7 +108,7 @@ export function Home() {
 
         <FlatList
           data={exercises}
-          keyExtractor={(item) => item}
+          keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <ExerciseCard onPress={handleOpenExerciseDetails} />
           )}
