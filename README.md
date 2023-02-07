@@ -16,6 +16,7 @@ O projeto foi desenvolvido utilizando as seguintes tecnologias
 
 - React Native
 - Expo
+- Native Base
 - Axios
 - Async Storage
 - React Hook Form
