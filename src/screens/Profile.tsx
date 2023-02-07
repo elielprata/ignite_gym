@@ -9,8 +9,11 @@ import {
   useToast,
   VStack,
 } from "native-base";
+import { Controller, useForm } from "react-hook-form";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
+
+import { useAuth } from "@hooks/useAuth";
 
 import { ScreenHeader } from "@components/ScreenHeader";
 import { UserPhoto } from "@components/UserPhoto";
@@ -19,6 +22,14 @@ import { Button } from "@components/Button";
 
 const PHOTO_SIZE = 33;
 
+type FormDataProps = {
+  name: string;
+  email: string;
+  password: string;
+  old_password: string;
+  confirm_password: string;
+};
+
 export function Profile() {
   const [photoIsLoading, setPhotoIsLoading] = useState(false);
   const [userPhoto, setUserPhoto] = useState(
@@ -26,6 +37,13 @@ export function Profile() {
   );
 
   const toast = useToast();
+  const { user } = useAuth();
+  const { control, handleSubmit } = useForm<FormDataProps>({
+    defaultValues: {
+      name: user.name,
+      email: user.email,
+    },
+  });
 
   async function handleUserPhotoSelect() {
     setPhotoIsLoading(true);
@@ -62,6 +80,8 @@ export function Profile() {
     }
   }
 
+  async function handleProfileUpdate() {}
+
   return (
     <VStack flex={1}>
       <ScreenHeader title="Perfil" />
@@ -96,13 +116,31 @@ export function Profile() {
             </Text>
           </TouchableOpacity>
 
-          <Input bg="gray.600" placeholder="Nome" />
+          <Controller
+            control={control}
+            name="name"
+            render={({ field: { onChange, value } }) => (
+              <Input
+                bg="gray.600"
+                placeholder="Nome"
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+          />
 
-          <Input
-            bg="gray.600"
-            placeholder="E-mail"
-            value="email@email.com"
-            isDisabled
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, value } }) => (
+              <Input
+                bg="gray.600"
+                placeholder="E-mail"
+                onChangeText={onChange}
+                value={value}
+                isDisabled
+              />
+            )}
           />
 
           <Heading
@@ -116,15 +154,50 @@ export function Profile() {
             Alterar senha
           </Heading>
 
-          <Input bg="gray.600" placeholder="Senha antiga" secureTextEntry />
-          <Input bg="gray.600" placeholder="Senha nova" secureTextEntry />
-          <Input
-            bg="gray.600"
-            placeholder="Confirme a nova senha"
-            secureTextEntry
+          <Controller
+            control={control}
+            name="name"
+            render={({ field: { onChange } }) => (
+              <Input
+                bg="gray.600"
+                placeholder="Senha antiga"
+                secureTextEntry
+                onChangeText={onChange}
+              />
+            )}
           />
 
-          <Button title="Atualizar" mt={4} />
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange } }) => (
+              <Input
+                bg="gray.600"
+                placeholder="Senha nova"
+                secureTextEntry
+                onChangeText={onChange}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="confirm_password"
+            render={({ field: { onChange } }) => (
+              <Input
+                bg="gray.600"
+                placeholder="Confirme a nova senha"
+                secureTextEntry
+                onChangeText={onChange}
+              />
+            )}
+          />
+
+          <Button
+            title="Atualizar"
+            mt={4}
+            onPress={handleSubmit(handleProfileUpdate)}
+          />
         </Center>
       </ScrollView>
     </VStack>
