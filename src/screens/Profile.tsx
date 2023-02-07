@@ -220,7 +220,7 @@ export function Profile() {
 
           <Controller
             control={control}
-            name="name"
+            name="old_password"
             render={({ field: { onChange } }) => (
               <Input
                 bg="gray.600"
