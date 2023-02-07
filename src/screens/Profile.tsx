@@ -20,6 +20,8 @@ import { AppError } from "@utils/AppErrors";
 
 import { useAuth } from "@hooks/useAuth";
 
+import defaultPhotoUserImg from "@assets/userPhotoDefault.png";
+
 import { ScreenHeader } from "@components/ScreenHeader";
 import { UserPhoto } from "@components/UserPhoto";
 import { Input } from "@components/Input";
@@ -60,9 +62,6 @@ const profileSchema = yup.object({
 export function Profile() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [photoIsLoading, setPhotoIsLoading] = useState(false);
-  const [userPhoto, setUserPhoto] = useState(
-    "https://github.com/elielprata.png"
-  );
 
   const toast = useToast();
   const { user, updateUserProfile } = useAuth();
@@ -192,7 +191,11 @@ export function Profile() {
             />
           ) : (
             <UserPhoto
-              source={{ uri: userPhoto }}
+              source={
+                user.avatar
+                  ? { uri: `${api.defaults.baseURL}/avatar/${user.avatar}` }
+                  : defaultPhotoUserImg
+              }
               alt="Imagem do Usuário"
               size={PHOTO_SIZE}
             />
